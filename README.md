@@ -28,7 +28,7 @@ Example with Lazy
 ```lua
 -- Custom Parameters (with defaults)
 {
-    "/home/mhd/.local/share/nvim/lazy/genlms.nvim",
+    "MHD-GDev/genlms.nvim",
 	config = function()
 		require("genlms").setup({
 			model = "local-model",
