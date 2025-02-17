@@ -28,49 +28,99 @@ Example with Lazy
 ```lua
 -- Custom Parameters (with defaults)
 {
-	"MHD-GDev/genlms.nvim",
-		require("genlms").setup({
-			model = "local-model",
-			quit_map = "q",
-			retry_map = "<c-r>",
-			accept_map = "<c-cr>",
-			host = "localhost",
-			port = "1123", -- default port for LMStudio
-			display_mode = "split", -- or "float", "horizontal-split"
-			show_prompt = true,
-			show_model = true,
-			no_auto_close = false,
-			init = function(options)
-				-- Check if model is already loaded
-				local check = vim.fn.system("curl -s http://" .. options.host .. ":" .. options.port .. "/v1/models")
-				if check and #check > 0 then
-					local success, decoded = pcall(vim.fn.json_decode, check)
-					if success and decoded and decoded.data and #decoded.data > 0 then
-						return
-					end
-				end
+ model = "local-model",
+    host = "localhost",
+    port = "1123",
+    file = false,
+    debug = false,
+    body = {stream = true},
+    show_prompt = false,
+    show_model = false,
+    quit_map = "q",
+    accept_map = "<c-cr>",
+    retry_map = "<c-r>",
+    hidden = false,
+    command = function(options)
+            -- Check if model is already loaded first
+            local check = vim.fn.system("curl -s http://" .. options.host .. ":" .. options.port .. "/v1/models")
+            if check and #check > 0 then
+                local success, decoded = pcall(vim.fn.json_decode, check)
+                if success and decoded and decoded.data and #decoded.data > 0 then
+                    options.model = decoded.data[1].id
+                    return "curl --silent --no-buffer -X POST http://" .. options.host ..
+                           ":" .. options.port .. "/v1/chat/completions -H 'Content-Type: application/json' -d $body"
+                end
+            end
+        -- Start LM Studio server first, then check connection
+        vim.fn.system("lms server start --cors=true")
+        
+        local recheck = vim.fn.system(
+            "curl -s -o /dev/null -w '%{http_code}' http://" .. options.host .. ":" .. options.port .. "/v1/models"
+        )
+        
+        if recheck == "200" then
+            return "curl --silent --no-buffer -X POST http://" .. options.host ..
+                   ":" .. options.port .. "/v1/chat/completions -H 'Content-Type: application/json' -d $body"
+        else
+            print("Could not connect to LM Studio server. Please check if it's installed correctly.")
+            return nil
+        end
+    end,
+    json_response = true,
+    display_mode = "float",
+    no_auto_close = false,
+    init = function() end,
+    list_models = function(options)
+        -- Start server proactively
+        vim.fn.system("lms server start --cors=true")
+        
+        local response = vim.fn.systemlist(
+            "curl -q --silent --no-buffer http://" .. options.host ..
+            ":" .. options.port .. "/v1/models"
+        )
+        
+        if response and #response > 0 then
+            local list = vim.fn.json_decode(response)
+            local models = {}
+            for _, model in ipairs(list.data) do
+                table.insert(models, model.id)
+            end
+            table.sort(models)
+            return models
+        end
+        
+        print("Could not fetch models. Please verify LM Studio installation.")
+        return {}
+    end,
+    result_filetype = "markdown",
+    select_model = function()
+        -- Start LM Studio server first
+        vim.fn.system("lms server start --cors=true")
+        
+        -- Wait briefly for server to start
+        vim.fn.system("sleep 1")
+        
+        -- Now check for loaded model
+        local response = vim.fn.system("curl -s -m 2 http://" .. M.host .. ":" .. M.port .. "/v1/models")
+        local success, decoded = pcall(vim.fn.json_decode, response)
+        if success and decoded and decoded.data and #decoded.data > 0 then
+            local current_model = decoded.data[1].id
+            -- Unload current model
+            vim.fn.system("lms unload " .. current_model)
+            print("Unloaded model: " .. current_model)
+        end
 
-				-- Start LM Studio server if not running
-				vim.fn.system("lms server start --cors=true")
-
-				-- Verify server is now running
-				local recheck = vim.fn.system("curl -s http://" .. options.host .. ":" .. options.port .. "/v1/models")
-				if not recheck or #recheck == 0 then
-					print("Could not start LM Studio server. Please check installation.")
-				end
-			end,
-			command = function(options)
-				return "curl --silent --no-buffer -X POST http://"
-					.. options.host
-					.. ":"
-					.. options.port
-					.. "/v1/chat/completions -H 'Content-Type: application/json' -d $body"
-			end,
-			json_response = true,
-			result_filetype = "markdown",
-			debug = false,
-		}),
-	-- Key mappings here
+        -- Get list of available models and let user select
+        local models = M.list_models(M)
+        vim.ui.select(models, {prompt = "Model:"}, function(item)
+            if item ~= nil then
+                vim.fn.system("lms load " .. item)
+                print("Model set to " .. item)
+                M.model = item
+                cache_model(item)
+            end
+        end)
+    end,
 }
 ```
 
