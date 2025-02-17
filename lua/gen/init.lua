@@ -817,6 +817,7 @@ M.select_model = function()
     end
 end
 
+
 M.select_model2 = function()
     -- First ensure LMS server is running
     vim.fn.system("lms server start --cors=true")
@@ -904,5 +905,16 @@ end, {})
 --         vim.fn.system("lms server stop")
 --     end
 -- })
+
+-- This triggers model selection at startup
+vim.api.nvim_create_autocmd("VimEnter", {
+    callback = function()
+        vim.schedule(function()
+            if not is_model_loaded() then
+                M.select_model()
+            end
+        end)
+    end,
+})
 
 return M
