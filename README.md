@@ -1,8 +1,6 @@
 # genlms.nvim
 
-
 Generate text using local LLMs with customizable prompts
-
 
 <div align="center">
 
@@ -31,7 +29,7 @@ Example with Lazy
 -- Custom Parameters (with defaults)
 {
 	"MHD-GDev/genlms.nvim",
-		opts = {
+		require("genlms").setup({
 			model = "local-model",
 			quit_map = "q",
 			retry_map = "<c-r>",
@@ -60,6 +58,7 @@ Example with Lazy
 				if not recheck or #recheck == 0 then
 					print("Could not start LM Studio server. Please check installation.")
 				end
+            require("genlms").select_model()
 			end,
 			command = function(options)
 				return "curl --silent --no-buffer -X POST http://"
@@ -71,14 +70,11 @@ Example with Lazy
 			json_response = true,
 			result_filetype = "markdown",
 			debug = false,
-		}
+		}),
+    require("genlms").select_model()
 	-- Key mappings here
 }
 ```
-you can also add model selection :
-```lua
-  require("genlms").select_model()
-``` 
 
 ## Usage
 
@@ -111,7 +107,9 @@ You can select a model from a list of all installed models with
 ```lua
 require('genlms').select_model()
 ```
+
 ##### Models:
+
 - You can downlaod models from [Hugingface](https://huggingface.co/models) <img height="20" src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/huggingface-color.svg"/>
 
 ## Custom Prompts
@@ -119,7 +117,8 @@ require('genlms').select_model()
 [All prompts](./lua/genlms/prompts.lua) are defined in `require('genlms').prompts`, you can enhance or modify them.
 
 Example:
-```lua
+
+````lua
 require('genlms').prompts['Elaborate_Text'] = {
   prompt = "Elaborate the following text:\n$text",
   replace = true
@@ -129,15 +128,15 @@ require('genlms').prompts['Fix_Code'] = {
   replace = true,
   extract = "```$filetype\n(.-)```"
 }
-```
+````
 
 You can use the following properties per prompt:
 
 - `prompt`: (string | function) Prompt either as a string or a function which should return a string. The result can use the following placeholders:
-   - `$text`: Visually selected text or the content of the current buffer
-   - `$filetype`: File type of the buffer (e.g. `javascript`)
-   - `$input`: Additional user input
-   - `$register`: Value of the unnamed register (yanked text)
+  - `$text`: Visually selected text or the content of the current buffer
+  - `$filetype`: File type of the buffer (e.g. `javascript`)
+  - `$input`: Additional user input
+  - `$register`: Value of the unnamed register (yanked text)
 - `replace`: `true` if the selected text shall be replaced with the generated output
 - `extract`: Regular expression used to extract the generated result
 - `model`: The model to use, default: `local-model`
@@ -147,6 +146,7 @@ You can use the following properties per prompt:
 User selections can be delegated to [Telescope](https://github.com/nvim-telescope/telescope.nvim) with [telescope-ui-select](https://github.com/nvim-telescope/telescope-ui-select.nvim).
 
 ## Dev notes:
+
 - This project was inspired by [gen.nvim](https://github.com/David-Kunz/gen.nvim), which laid the foundation for this version.
 - For more information, see the [original project](https://github.com/David-Kunz/gen.nvim).
 - We would like to express our gratitude to the original authors and contributors who made this project possible.
