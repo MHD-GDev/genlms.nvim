@@ -26,68 +26,43 @@ Example with Lazy
 ```
 
 ```lua
--- Custom Parameters (with defaults)
-{
-    "MHD-GDev/genlms.nvim",
-	config = function()
-		require("gen").setup({
-			model = "local-model",
-			quit_map = "q",
-			retry_map = "<c-r>",
-			accept_map = "<c-cr>",
-			host = "localhost",
-			port = "1123",
-			display_mode = "split",
-			show_prompt = true,
-			show_model = true,
-			no_auto_close = false,
-			init = function(options)
-				-- Check if model is already loaded
-				local check = vim.fn.system("curl -s http://" .. options.host .. ":" .. options.port .. "/v1/models")
-				if check and #check > 0 then
-					local success, decoded = pcall(vim.fn.json_decode, check)
-					if success and decoded and decoded.data and #decoded.data > 0 then
-						return
-					end
-				end
+    -- Custom Parameters (with defaults)
+    {
+        "MHD-GDev/genlms.nvim",
+        config = function()
+            require("gen").setup({
+                quit_map = "q",
+                retry_map = "<c-r>",
+                accept_map = "<c-cr>",
+                host = "localhost",
+                port = "1123",
+                display_mode = "split", -- options: split, horizontal-split, float
+                show_prompt = true,
+                show_model = true,
+                no_auto_close = false,
+                json_response = true,
+                result_filetype = "markdown",
+                debug = false,
+            })
 
-				-- Start LM Studio server if not running
-				vim.fn.system("lms server start --cors=true")
+            -- Key mappings
+            vim.keymap.set({ "n", "v" }, "<leader>]", ":Gen<CR>")
+            vim.keymap.set("n", "<leader>ga", "<CMD>Gen Ask<CR>", { noremap = true })
+            vim.keymap.set("n", "<leader>gc", "<CMD>Gen Chat<CR>", { noremap = true })
+            vim.keymap.set("n", "<leader>gg", "<CMD>Gen Generate<CR>", { noremap = true })
+            vim.keymap.set("v", "<leader>gC", ":'<,'>Gen Change_Code<CR>", { noremap = true })
+            vim.keymap.set("v", "<leader>ge", ":'<,'>Gen Enhance_Code<CR>", { noremap = true })
+            vim.keymap.set("v", "<leader>gR", ":'<,'>Gen Review_Code<CR>", { noremap = true })
+            vim.keymap.set("v", "<leader>gs", ":'<,'>Gen Summarize<CR>", { noremap = true })
+            vim.keymap.set("v", "<leader>ga", ":'<,'>Gen Ask<CR>", { noremap = true })
+            vim.keymap.set("v", "<leader>gx", ":'<,'>Gen Fix_Code<CR>", { noremap = true })
+            vim.keymap.set("n", "<leader>gl", ":'<,'>GenloadModel<CR>", { noremap = true })
+            vim.keymap.set("n", "<leader>gu", ":'<,'>GenUnloadModel<CR>", { noremap = true })
 
-				-- Verify server is now running
-				local recheck = vim.fn.system("curl -s http://" .. options.host .. ":" .. options.port .. "/v1/models")
-				if not recheck or #recheck == 0 then
-					print("Could not start LM Studio server. Please check installation.")
-				end
-			end,
-			command = function(options)
-				return "curl --silent --no-buffer -X POST http://"
-					.. options.host
-					.. ":"
-					.. options.port
-					.. "/v1/chat/completions -H 'Content-Type: application/json' -d $body"
-			end,
-			json_response = true,
-			result_filetype = "markdown",
-			debug = false,
-		})
-
-		-- Key mappings
-        vim.keymap.set({ 'n', 'v' }, '<leader>]', ':Gen<CR>')
-		vim.keymap.set("n", "<leader>ga", "<CMD>Gen Ask<CR>", { noremap = true })
-		vim.keymap.set("n", "<leader>gc", "<CMD>Gen Chat<CR>", { noremap = true })
-		vim.keymap.set("n", "<leader>gg", "<CMD>Gen Generate<CR>", { noremap = true })
-		vim.keymap.set("v", "<leader>gC", ":'<,'>Gen Change_Code<CR>", { noremap = true })
-		vim.keymap.set("v", "<leader>ge", ":'<,'>Gen Enhance_Code<CR>", { noremap = true })
-		vim.keymap.set("v", "<leader>gR", ":'<,'>Gen Review_Code<CR>", { noremap = true })
-		vim.keymap.set("v", "<leader>gs", ":'<,'>Gen Summarize<CR>", { noremap = true })
-		vim.keymap.set("v", "<leader>ga", ":'<,'>Gen Ask<CR>", { noremap = true })
-		vim.keymap.set("v", "<leader>gx", ":'<,'>Gen Fix_Code<CR>", { noremap = true })
-
-		-- Auto-select model on startup
-		require("gen").select_model()
-	end
-}
+            -- Auto-select model on startup
+            require("gen").select_model()
+        end,
+    },
 ```
 
 ## Usage
@@ -115,6 +90,8 @@ After a conversation begins, the entire context is sent to the LLM. That allows 
 and once the window is closed, you start with a fresh conversation.
 
 For prompts which don't automatically replace the previously selected text (`replace = false`), you can replace the selected text with the generated output with `<c-cr>`.
+
+Also added ```:GenUnloadModel``` and ```:GenloadModel``` commands to load and unload models.
 
 ##### Models:
 
