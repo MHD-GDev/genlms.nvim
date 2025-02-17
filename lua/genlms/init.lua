@@ -1,6 +1,6 @@
 local prompts = require("genlms.prompts")
 local M = {}
-M.select_model()
+
 
 local globals = {}
 local model_cache = {}
@@ -794,5 +794,6 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
     end
 })
 
+M.select_model()
 
 return M
