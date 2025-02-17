@@ -43,6 +43,25 @@ Example with Lazy
     show_prompt = true,
     show_model = true,
     no_auto_close = false,
+			init = function(options)
+				-- Check if model is already loaded
+				local check = vim.fn.system("curl -s http://" .. options.host .. ":" .. options.port .. "/v1/models")
+				if check and #check > 0 then
+					local success, decoded = pcall(vim.fn.json_decode, check)
+					if success and decoded and decoded.data and #decoded.data > 0 then
+						return
+					end
+				end
+
+				-- Start LM Studio server if not running
+				vim.fn.system("lms server start --cors=true")
+
+				-- Verify server is now running
+				local recheck = vim.fn.system("curl -s http://" .. options.host .. ":" .. options.port .. "/v1/models")
+				if not recheck or #recheck == 0 then
+					print("Could not start LM Studio server. Please check installation.")
+				end
+			end,
     command = function(options)
       return "curl --silent --no-buffer -X POST http://" .. options.host .. ":" .. options.port .. "/v1/chat/completions -H 'Content-Type: application/json' -d $body"
       end,
