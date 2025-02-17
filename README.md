@@ -31,7 +31,7 @@ Example with Lazy
 -- Custom Parameters (with defaults)
 {
 	"MHD-GDev/genlms.nvim",
-		require("genlms").setup({
+		opts = {
 			model = "local-model",
 			quit_map = "q",
 			retry_map = "<c-r>",
@@ -71,7 +71,7 @@ Example with Lazy
 			json_response = true,
 			result_filetype = "markdown",
 			debug = false,
-		})
+		}
 	-- Key mappings here
 }
 ```
