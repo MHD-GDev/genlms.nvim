@@ -35,6 +35,11 @@ return {
         replace = true,
         extract = "```$filetype\n(.-)```",
     },
+    Fix_code = {
+        prompt = "Here is the code:\n```$filetype\n$text\n```\n\n,Fix the code and only output the result in format ```$filetype\n...\n```:\n```$filetype\n$text\n```",
+        replace = true,
+        extract = "```$filetype\n(.-)```",
+    },
     Change_Code = {
         prompt = "Here is the code I want you to change:\n```$filetype\n$text\n```\n\n, only output the result in format ```$filetype\n...\n```:\n```$filetype\n$text\n```",
         replace = true,

@@ -287,7 +287,8 @@ local function write_to_buffer(lines)
             vim.api.nvim_win_set_cursor(globals.float_win, { new_last_row, 0 })
         end
     end
-    if #lines > 1000 then
+
+if #lines > 1000 then
         local chunks = chunk_large_content(table.concat(lines, "\n"), 1000)
         for _, chunk in ipairs(chunks) do
             vim.schedule(function()
@@ -302,6 +303,9 @@ local function write_to_buffer(lines)
 end
 
 local function create_window(cmd, opts)
+    if globals.result_buffer then
+        write_to_buffer({ "Thinking...", "" })
+    end
     local function setup_window()
         globals.result_buffer = vim.fn.bufnr("%")
         globals.float_win = vim.fn.win_getid()
@@ -821,26 +825,26 @@ end
 M.select_model2 = function()
     -- First ensure LMS server is running
     vim.fn.system("lms server start --cors=true")
-    
+
     -- Check current model status
     local response = vim.fn.system("curl -s -m 2 http://" .. M.host .. ":" .. M.port .. "/v1/models")
     local success, decoded = pcall(vim.fn.json_decode, response)
-    
+
     -- Get available models
     local models = M.list_models(M)
-    
+
     -- If no models available, exit early
     if #models == 0 then
         print("No models found. Please add models to LM Studio first.")
         return
     end
-    
+
     -- Unload any existing model
     if success and decoded and decoded.data and #decoded.data > 0 then
         local current_model = decoded.data[1].id
         vim.fn.system("lms unload " .. current_model)
     end
-    
+
     -- Present model selection to user
     vim.ui.select(models, { prompt = "Select model to load:" }, function(item)
         if item then
