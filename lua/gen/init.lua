@@ -67,12 +67,12 @@ local function check_loaded_model()
     if not response or #response == 0 then
         return handle_model_load_error()
     end
-    
+
     local success, decoded = pcall(vim.fn.json_decode, response)
     if not success or not decoded or not decoded.data or #decoded.data == 0 then
         return handle_model_load_error()
     end
-    
+
     M.model = decoded.data[1].id
     return true
 end
@@ -117,11 +117,11 @@ local default_options = {
             end
         -- Start LM Studio server first, then check connection
         vim.fn.system("lms server start --cors=true")
-        
+
         local recheck = vim.fn.system(
             "curl -s -o /dev/null -w '%{http_code}' http://" .. options.host .. ":" .. options.port .. "/v1/models"
         )
-        
+
         if recheck == "200" then
             return "curl --silent --no-buffer -X POST http://" .. options.host ..
                    ":" .. options.port .. "/v1/chat/completions -H 'Content-Type: application/json' -d $body"
@@ -137,12 +137,12 @@ local default_options = {
     list_models = function(options)
         -- Start server proactively
         vim.fn.system("lms server start --cors=true")
-        
+
         local response = vim.fn.systemlist(
             "curl -q --silent --no-buffer http://" .. options.host ..
             ":" .. options.port .. "/v1/models"
         )
-        
+
         if response and #response > 0 then
             local list = vim.fn.json_decode(response)
             local models = {}
@@ -152,7 +152,7 @@ local default_options = {
             table.sort(models)
             return models
         end
-        
+
         print("Could not fetch models. Please verify LM Studio installation.")
         return {}
     end,
@@ -646,7 +646,7 @@ vim.api.nvim_create_user_command("Gen", function(arg)
         local p = vim.tbl_deep_extend("force", {mode = mode}, prompt)
         return M.exec(p)
     end
-    
+
     select_prompt(function(item)
         if not item then return end
         local p = vim.tbl_deep_extend("force", {mode = mode}, M.prompts[item])
@@ -712,7 +712,7 @@ function Process_response(str, json_response)
                 -- When the message sequence is complete, add it to the context
                 if choice.finish_reason == "stop" then
                     table.insert(globals.context, {
-                        role = "assistant", 
+                        role = "assistant",
                         content = globals.context_buffer
                     })
                     globals.context_buffer = ""
@@ -746,10 +746,7 @@ end
 M.select_model = function()
     -- Start LM Studio server first
     vim.fn.system("lms server start --cors=true")
-    
-    -- Wait briefly for server to start
-    vim.fn.system("sleep 1")
-    
+
     -- Now check for loaded model
     local response = vim.fn.system("curl -s -m 2 http://" .. M.host .. ":" .. M.port .. "/v1/models")
     local success, decoded = pcall(vim.fn.json_decode, response)
