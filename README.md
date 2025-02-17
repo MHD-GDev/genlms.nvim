@@ -28,63 +28,60 @@ Example with Lazy
 ```
 
 ```lua
-
 -- Custom Parameters (with defaults)
 {
-  "MHD-GDev/genlms.nvim",
-  opts = {
-    model = "local-model",
-    quit_map = "q",
-    retry_map = "<c-r>",
-    accept_map = "<c-cr>",
-    host = "localhost",
-    port = "1123", -- default port for LMStudio
-    display_mode = "split", -- or "float", "horizontal-split"
-    show_prompt = true,
-    show_model = true,
-    no_auto_close = false,
-			init = function(options)
-				-- Check if model is already loaded
-				local check = vim.fn.system("curl -s http://" .. options.host .. ":" .. options.port .. "/v1/models")
-				if check and #check > 0 then
-					local success, decoded = pcall(vim.fn.json_decode, check)
-					if success and decoded and decoded.data and #decoded.data > 0 then
-						return
-					end
-				end
+    "MHD-GDev/genlms.nvim",
+    require('genlms').setup({
+        model = "local-model",
+        quit_map = "q",
+        retry_map = "<c-r>",
+        accept_map = "<c-cr>",
+        host = "localhost",
+        port = "1123", -- default port for LMStudio
+        display_mode = "split", -- or "float", "horizontal-split"
+        show_prompt = true,
+        show_model = true,
+        no_auto_close = false,
+        init = function(options)
+            -- Check if model is already loaded
+            local check = vim.fn.system(
+                              "curl -s http://" .. options.host .. ":" ..
+                                  options.port .. "/v1/models")
+            if check and #check > 0 then
+                local success, decoded = pcall(vim.fn.json_decode, check)
+                if success and decoded and decoded.data and #decoded.data > 0 then
+                    return
+                end
+            end
 
-				-- Start LM Studio server if not running
-				vim.fn.system("lms server start --cors=true")
+            -- Start LM Studio server if not running
+            vim.fn.system("lms server start --cors=true")
 
-				-- Verify server is now running
-				local recheck = vim.fn.system("curl -s http://" .. options.host .. ":" .. options.port .. "/v1/models")
-				if not recheck or #recheck == 0 then
-					print("Could not start LM Studio server. Please check installation.")
-				end
-			end,
-    command = function(options)
-      return "curl --silent --no-buffer -X POST http://" .. options.host .. ":" .. options.port .. "/v1/chat/completions -H 'Content-Type: application/json' -d $body"
-      end,
-    json_response = true,
-    result_filetype = "markdown",
-    debug = false,
-  },
-  -- Key mappings here
+            -- Verify server is now running
+            local recheck = vim.fn.system(
+                                "curl -s http://" .. options.host .. ":" ..
+                                    options.port .. "/v1/models")
+            if not recheck or #recheck == 0 then
+                print(
+                    "Could not start LM Studio server. Please check installation.")
+            end
+        end,
+        command = function(options)
+            return
+                "curl --silent --no-buffer -X POST http://" .. options.host ..
+                    ":" .. options.port ..
+                    "/v1/chat/completions -H 'Content-Type: application/json' -d $body"
+        end,
+        json_response = true,
+        result_filetype = "markdown",
+        debug = false
+    }),
+    -- Key mappings here
 
-  --Auto-select model on startup
-  require("genlms").select_model()
-},
+    -- Auto-select model on startup
+    require("genlms").select_model()
+}
 ```
-
-Alternatively, you can call the `setup` function:
-
-```lua
-require('genlms').setup({
-  -- same as above
-})
-```
-
-
 
 ## Usage
 
