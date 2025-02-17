@@ -49,7 +49,7 @@ Example with Lazy
     json_response = true,
     result_filetype = "markdown",
     debug = false,
-  }
+  },
   -- Key mappings here
 
   --Auto-select model on startup
