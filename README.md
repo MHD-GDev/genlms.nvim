@@ -58,7 +58,6 @@ Example with Lazy
 				if not recheck or #recheck == 0 then
 					print("Could not start LM Studio server. Please check installation.")
 				end
-            require("genlms").select_model()
 			end,
 			command = function(options)
 				return "curl --silent --no-buffer -X POST http://"
@@ -71,7 +70,6 @@ Example with Lazy
 			result_filetype = "markdown",
 			debug = false,
 		}),
-    require("genlms").select_model()
 	-- Key mappings here
 }
 ```

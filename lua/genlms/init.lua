@@ -1,5 +1,6 @@
 local prompts = require("genlms.prompts")
 local M = {}
+M.select_model()
 
 local globals = {}
 local model_cache = {}
