@@ -157,7 +157,35 @@ local default_options = {
         print("Could not fetch models. Please verify LM Studio installation.")
         return {}
     end,
-    result_filetype = "markdown"
+    result_filetype = "markdown",
+    select_model = function()
+        -- Start LM Studio server first
+        vim.fn.system("lms server start --cors=true")
+        
+        -- Wait briefly for server to start
+        vim.fn.system("sleep 1")
+        
+        -- Now check for loaded model
+        local response = vim.fn.system("curl -s -m 2 http://" .. M.host .. ":" .. M.port .. "/v1/models")
+        local success, decoded = pcall(vim.fn.json_decode, response)
+        if success and decoded and decoded.data and #decoded.data > 0 then
+            local current_model = decoded.data[1].id
+            -- Unload current model
+            vim.fn.system("lms unload " .. current_model)
+            print("Unloaded model: " .. current_model)
+        end
+
+        -- Get list of available models and let user select
+        local models = M.list_models(M)
+        vim.ui.select(models, {prompt = "Model:"}, function(item)
+            if item ~= nil then
+                vim.fn.system("lms load " .. item)
+                print("Model set to " .. item)
+                M.model = item
+                cache_model(item)
+            end
+        end)
+    end,
 }
 for k, v in pairs(default_options) do M[k] = v end
 
