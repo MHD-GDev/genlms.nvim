@@ -30,7 +30,7 @@ Example with Lazy
 {
     "MHD-GDev/genlms.nvim",
 	config = function()
-		require("genlms").setup({
+		require("gen").setup({
 			model = "local-model",
 			quit_map = "q",
 			retry_map = "<c-r>",
@@ -85,7 +85,7 @@ Example with Lazy
 		vim.keymap.set("v", "<leader>gx", ":'<,'>Gen Fix_Code<CR>", { noremap = true })
 
 		-- Auto-select model on startup
-		require("genlms").select_model()
+		require("gen").select_model()
 	end
 }
 ```
@@ -100,7 +100,7 @@ Example key maps:
 vim.keymap.set({ 'n', 'v' }, '<leader>]', ':Gen<CR>')
 ```
 
-You can also directly invoke it with one of the [predefined prompts](./lua/genlms/prompts.lua) or your custom prompts:
+You can also directly invoke it with one of the [predefined prompts](./lua/gen/prompts.lua) or your custom prompts:
 
 ```lua
 vim.keymap.set('v', '<leader>]', ':Gen Enhance_Grammar_Spelling<CR>')
@@ -116,28 +116,22 @@ and once the window is closed, you start with a fresh conversation.
 
 For prompts which don't automatically replace the previously selected text (`replace = false`), you can replace the selected text with the generated output with `<c-cr>`.
 
-You can select a model from a list of all installed models with
-
-```lua
-require('genlms').select_model()
-```
-
 ##### Models:
 
 - You can downlaod models from [Hugingface](https://huggingface.co/models) <img height="20" src="https://unpkg.com/@lobehub/icons-static-svg@latest/icons/huggingface-color.svg"/>
 
 ## Custom Prompts
 
-[All prompts](./lua/genlms/prompts.lua) are defined in `require('genlms').prompts`, you can enhance or modify them.
+[All prompts](./lua/gen/prompts.lua) are defined in `require('gen').prompts`, you can enhance or modify them.
 
 Example:
 
 ````lua
-require('genlms').prompts['Elaborate_Text'] = {
+require('gen').prompts['Elaborate_Text'] = {
   prompt = "Elaborate the following text:\n$text",
   replace = true
 }
-require('genlms').prompts['Fix_Code'] = {
+require('gen').prompts['Fix_Code'] = {
   prompt = "Fix the following code. Only output the result in format ```$filetype\n...\n```:\n```$filetype\n$text\n```",
   replace = true,
   extract = "```$filetype\n(.-)```"

@@ -1,6 +1,5 @@
-local prompts = require("genlms.prompts")
+local prompts = require("gen.prompts")
 local M = {}
-
 
 local globals = {}
 local model_cache = {}
@@ -157,35 +156,7 @@ local default_options = {
         print("Could not fetch models. Please verify LM Studio installation.")
         return {}
     end,
-    result_filetype = "markdown",
-    select_model = function()
-        -- Start LM Studio server first
-        vim.fn.system("lms server start --cors=true")
-        
-        -- Wait briefly for server to start
-        vim.fn.system("sleep 1")
-        
-        -- Now check for loaded model
-        local response = vim.fn.system("curl -s -m 2 http://" .. M.host .. ":" .. M.port .. "/v1/models")
-        local success, decoded = pcall(vim.fn.json_decode, response)
-        if success and decoded and decoded.data and #decoded.data > 0 then
-            local current_model = decoded.data[1].id
-            -- Unload current model
-            vim.fn.system("lms unload " .. current_model)
-            print("Unloaded model: " .. current_model)
-        end
-
-        -- Get list of available models and let user select
-        local models = M.list_models(M)
-        vim.ui.select(models, {prompt = "Model:"}, function(item)
-            if item ~= nil then
-                vim.fn.system("lms load " .. item)
-                print("Model set to " .. item)
-                M.model = item
-                cache_model(item)
-            end
-        end)
-    end,
+    result_filetype = "markdown"
 }
 for k, v in pairs(default_options) do M[k] = v end
 
@@ -343,10 +314,10 @@ local function create_window(cmd, opts)
                                                   win_opts)
         setup_window()
     elseif display_mode == "horizontal-split" then
-        vim.cmd("split genlms.nvim")
+        vim.cmd("split gen.nvim")
         setup_window()
     else
-        vim.cmd("vnew genlms.nvim")
+        vim.cmd("vnew gen.nvim")
         setup_window()
     end
     vim.keymap.set("n", "<esc>", function()
@@ -503,7 +474,7 @@ M.exec = function(options)
         if M.model_options ~= nil then -- llamacpp server - model options: eg. temperature, top_k, top_p
             body = vim.tbl_extend("force", body, M.model_options)
         end
-        if opts.model_options ~= nil then -- override model options from genlms command (if exist)
+        if opts.model_options ~= nil then -- override model options from gen command (if exist)
             body = vim.tbl_extend("force", body, opts.model_options)
         end
 
@@ -602,7 +573,7 @@ M.run_command = function(cmd, opts)
         end
     })
 
-    local group = vim.api.nvim_create_augroup("genlms", {clear = true})
+    local group = vim.api.nvim_create_augroup("gen", {clear = true})
     vim.api.nvim_create_autocmd('WinClosed', {
         buffer = globals.result_buffer,
         group = group,
@@ -822,6 +793,5 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
     end
 })
 
-M.select_model()
 
 return M
