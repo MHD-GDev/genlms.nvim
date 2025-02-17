@@ -627,7 +627,7 @@ local function select_prompt(cb)
     }, function(item) cb(item) end)
 end
 
-vim.api.nvim_create_user_command("Genlms", function(arg)
+vim.api.nvim_create_user_command("Gen", function(arg)
     if not check_loaded_model() then
         M.select_model()
     end
