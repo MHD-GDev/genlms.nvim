@@ -757,7 +757,7 @@ function Process_response(str, json_response)
                 if result.content then
                     globals.context = result.content
                 end
-            elseif result.response then -- ollama generate endpoint
+            elseif result.response then -- lms generate endpoint
                 text = result.response
                 if result.context then
                     globals.context = result.context

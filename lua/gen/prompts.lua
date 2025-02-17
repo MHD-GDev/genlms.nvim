@@ -1,8 +1,8 @@
 return {
-    Generate = { prompt = "$input", replace = true },
+    Generate = { prompt = "$input,just output the final text without additional quotes around it:\n$text", replace = true },
     Chat = { prompt = "$input" },
     Summarize = { prompt = "Summarize the following text:\n$text" },
-    Ask = { prompt = "Here is the code I want to ask about:\n```$filetype\n$text\n```\n\nMy question is: $input" },
+    Ask = { prompt = "Here is the code:\n```$filetype\n$text\n```\n\n My question is: $input" },
     Change = {
         prompt = "Change the following text, $input, just output the final text without additional quotes around it:\n$text",
         replace = true,
@@ -28,7 +28,7 @@ return {
         replace = true,
     },
     Review_Code = {
-        prompt = "Review the following code and make concise suggestions:\n```$filetype\n$text\n```",
+        prompt = "Review the following code and make concise suggestions if needed:\n```$filetype\n$text\n```",
     },
     Enhance_Code = {
         prompt = "Here is the code I want you to enhance:\n```$filetype\n$text\n```\n\n, only output the result in format ```$filetype\n...\n```:\n```$filetype\n$text\n```",
@@ -41,7 +41,7 @@ return {
         extract = "```$filetype\n(.-)```",
     },
     Change_Code = {
-        prompt = "Here is the code I want you to change:\n```$filetype\n$text\n```\n\n, only output the result in format ```$filetype\n...\n```:\n```$filetype\n$text\n```",
+        prompt = "Here is the code I want you to change, if there is no possible change for it then simply tell me there isn't any:\n```$filetype\n$text\n```\n\n, only output the result in format ```$filetype\n...\n```:\n```$filetype\n$text\n```",
         replace = true,
         extract = "```$filetype\n(.-)```",
     },
