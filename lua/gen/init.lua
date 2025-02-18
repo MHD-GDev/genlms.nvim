@@ -22,28 +22,33 @@ end
 
 -- lualine
 local function create_lualine_component()
-    local cache = { status = "off", last_check = 0 }
-    local check_interval = 1000 -- ms
-
-    return function()
-        local current_time = vim.loop.now()
-        if (current_time - cache.last_check) > check_interval then
-            local check = vim.fn.system("curl -s http://localhost:1123/v1/models")
-            if check and #check > 0 then
-                local success, decoded = pcall(vim.fn.json_decode, check)
-                if success and decoded and decoded.data and #decoded.data > 0 then
-                    local model_name = decoded.data[1].id
-                    model_name = model_name:match("[^/]*$")
-                    cache.status = "on:" .. model_name
-                else
-                    cache.status = "off"
-                end
+    local status = "off"
+    
+    -- Function to update status that can be called from GenLoadModel
+    local function update_status()
+        local check = vim.fn.system("curl -s http://localhost:1123/v1/models")
+        if check and #check > 0 then
+            local success, decoded = pcall(vim.fn.json_decode, check)
+            if success and decoded and decoded.data and #decoded.data > 0 then
+                local model_name = decoded.data[1].id
+                model_name = model_name:match("[^/]*$")
+                status = "on:" .. model_name
             else
-                cache.status = "off"
+                status = "off"
             end
-            cache.last_check = current_time
+        else
+            status = "off"
         end
-        return cache.status
+    end
+
+    -- Initial status check
+    update_status()
+    
+    -- Make update_status available globally
+    M.update_lualine_status = update_status
+    
+    return function()
+        return status
     end
 end
 
@@ -751,6 +756,7 @@ vim.api.nvim_create_user_command("GenUnloadModel", function()
         -- Ensure server stops after unloading
         vim.fn.system("lms server stop")
         print("Unloaded model and stopped server: " .. model_id)
+        M.update_lualine_status() -- Updates lualine status
     end
 end, {})
 
@@ -773,6 +779,7 @@ vim.api.nvim_create_user_command("GenLoadModel", function()
             vim.fn.system("lms load " .. item)
             print("Model set to " .. item)
             M.model = item
+            M.update_lualine_status() -- Updates lualine status
         end
     end)
 end, {})
