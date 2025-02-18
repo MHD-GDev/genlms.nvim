@@ -150,10 +150,13 @@ for k, v in pairs(default_options) do
 end
 
 M.setup = function(opts)
-    for k, v in pairs(opts) do
+    -- Add validation before applying settings
+    local validated_opts = validate_options(opts)
+    for k, v in pairs(validated_opts) do
         M[k] = v
     end
 end
+
 
 local function close_window(opts)
     local lines = {}
