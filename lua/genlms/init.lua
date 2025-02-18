@@ -23,7 +23,7 @@ end
 -- lualine
 local function create_lualine_component()
     local status = "off"
-    
+
     -- Function to update status that can be called from GenLoadModel
     local function update_status()
         local check = vim.fn.system("curl -s http://localhost:1123/v1/models")
@@ -43,10 +43,10 @@ local function create_lualine_component()
 
     -- Initial status check
     update_status()
-    
+
     -- Make update_status available globally
     M.update_lualine_status = update_status
-    
+
     return function()
         return status
     end
@@ -150,9 +150,7 @@ for k, v in pairs(default_options) do
 end
 
 M.setup = function(opts)
-    -- Add validation before applying settings
-    local validated_opts = validate_options(opts)
-    for k, v in pairs(validated_opts) do
+    for k, v in pairs(opts) do
         M[k] = v
     end
 end
@@ -284,7 +282,7 @@ local function create_window(cmd, opts)
     -- Create buffer and show "Thinking..." immediately
     globals.result_buffer = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(globals.result_buffer, 0, -1, false, {"Thinking...", ""})
-    
+
     local function setup_window()
         globals.result_buffer = vim.fn.bufnr("%")
         globals.float_win = vim.fn.win_getid()
@@ -335,7 +333,7 @@ local function create_window(cmd, opts)
 end
 
 M.exec = function(options)
-  
+
     local opts = vim.tbl_deep_extend("force", M, options)
     if opts.hidden then
         -- the only reasonable thing to do if no output can be seen
@@ -630,7 +628,7 @@ local function select_prompt(cb)
 end
 
 vim.api.nvim_create_user_command("Genlms", function(arg)
-   
+
     local mode
     if arg.range == 0 then
         mode = "n"
@@ -758,6 +756,7 @@ vim.api.nvim_create_user_command("GenUnloadModel", function()
         vim.fn.system("lms unload " .. model_id)
         -- Ensure server stops after unloading
         vim.fn.system("lms server stop")
+        vim.fn.system("lms server stop")
         print("Unloaded model and stopped server: " .. model_id)
         M.update_lualine_status() -- Updates lualine status
     end
@@ -767,7 +766,7 @@ vim.api.nvim_create_user_command("GenLoadModel", function()
     -- Check if a model is currently loaded
     local response = vim.fn.system("curl -s http://" .. M.host .. ":" .. M.port .. "/v1/models")
     local success, decoded = pcall(vim.fn.json_decode, response)
-    
+
     -- If there's a loaded model, unload it first
     if success and decoded and decoded.data and #decoded.data > 0 then
         local current_model = decoded.data[1].id
