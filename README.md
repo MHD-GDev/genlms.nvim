@@ -32,7 +32,7 @@ Example with Lazy
                 retry_map = "<c-r>",
                 accept_map = "<c-cr>",
                 host = "localhost",
-                port = "1123",
+                port = "1234",
                 display_mode = "split",
                 show_prompt = true,
                 show_model = true,
