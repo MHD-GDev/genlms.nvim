@@ -525,11 +525,11 @@ M.run_command = function(cmd, opts)
             partial_data = table.remove(lines) or ""
 
             for _, line in ipairs(lines) do
-                Process_response(line, globals.job_id, opts.json_response)
+                Process_response(line, opts.json_response)
             end
 
             if partial_data:sub(-1) == "}" then
-                Process_response(partial_data, globals.job_id, opts.json_response)
+                Process_response(partial_data, opts.json_response)
                 partial_data = ""
             end
         end,
