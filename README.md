@@ -86,7 +86,7 @@ and once the window is closed, you start with a fresh conversation.
 For prompts which don't automatically replace the previously selected text (`replace = false`), you can replace the selected text with the generated output with `<c-cr>`.
 
 ### Note:
-To use genlms you need to load or unload models with these commands ```:GenUnloadModel``` and ```:GenloadModel``` .
+To use genlms you need to load or unload models with these commands ```:GenUnloadModel``` and ```:GenLoadModel``` .
 
 ##### Models:
 
