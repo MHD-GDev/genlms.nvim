@@ -20,6 +20,46 @@ local function reset(keep_selection)
     globals.context_buffer = nil
 end
 
+-- lualine
+local function create_lualine_component()
+    local cache = { status = "off", last_check = 0 }
+    local check_interval = 1000 -- ms
+
+    return function()
+        local current_time = vim.loop.now()
+        if (current_time - cache.last_check) > check_interval then
+            local check = vim.fn.system("curl -s http://localhost:1123/v1/models")
+            if check and #check > 0 then
+                local success, decoded = pcall(vim.fn.json_decode, check)
+                if success and decoded and decoded.data and #decoded.data > 0 then
+                    local model_name = decoded.data[1].id
+                    model_name = model_name:match("[^/]*$")
+                    cache.status = "on:" .. model_name
+                else
+                    cache.status = "off"
+                end
+            else
+                cache.status = "off"
+            end
+            cache.last_check = current_time
+        end
+        return cache.status
+    end
+end
+
+
+M.get_lualine_component = create_lualine_component
+
+local status_ok, lualine = pcall(require, "lualine")
+if status_ok then
+    local current_config = lualine.get_config()
+    current_config.sections.lualine_x = vim.list_extend(
+        { create_lualine_component() },
+        current_config.sections.lualine_x or {}
+    )
+    lualine.setup(current_config)
+end
+
 
 local function trim_table(tbl)
     local function is_whitespace(str)
@@ -708,12 +748,24 @@ vim.api.nvim_create_user_command("GenUnloadModel", function()
     if success and decoded and decoded.data and #decoded.data > 0 then
         local model_id = decoded.data[1].id
         vim.fn.system("lms unload " .. model_id)
+        -- Ensure server stops after unloading
         vim.fn.system("lms server stop")
-        print("Unloaded model: " .. model_id)
+        print("Unloaded model and stopped server: " .. model_id)
     end
 end, {})
 
 vim.api.nvim_create_user_command("GenLoadModel", function()
+    -- Check if a model is currently loaded
+    local response = vim.fn.system("curl -s http://" .. M.host .. ":" .. M.port .. "/v1/models")
+    local success, decoded = pcall(vim.fn.json_decode, response)
+    
+    -- If there's a loaded model, unload it first
+    if success and decoded and decoded.data and #decoded.data > 0 then
+        local current_model = decoded.data[1].id
+        vim.fn.system("lms unload " .. current_model)
+        print("Unloaded previous model: " .. current_model)
+    end
+
     -- Get list of available models and let user select
     local models = M.list_models(M)
     vim.ui.select(models, { prompt = "Select model to load:" }, function(item)
@@ -724,5 +776,6 @@ vim.api.nvim_create_user_command("GenLoadModel", function()
         end
     end)
 end, {})
+
 
 return M

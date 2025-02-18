@@ -29,6 +29,9 @@ Example with Lazy
     -- Custom Parameters (with defaults)
     {
         "MHD-GDev/genlms.nvim",
+        dependencies = {
+            "nvim-lualine/lualine.nvim",
+        },
         config = function()
             require("gen").setup({
                 quit_map = "q",
@@ -36,7 +39,7 @@ Example with Lazy
                 accept_map = "<c-cr>",
                 host = "localhost",
                 port = "1123",
-                display_mode = "split", -- options: split, horizontal-split, float
+                display_mode = "split",
                 show_prompt = true,
                 show_model = true,
                 no_auto_close = false,
@@ -56,11 +59,8 @@ Example with Lazy
             vim.keymap.set("v", "<leader>gs", ":'<,'>Gen Summarize<CR>", { noremap = true })
             vim.keymap.set("v", "<leader>ga", ":'<,'>Gen Ask<CR>", { noremap = true })
             vim.keymap.set("v", "<leader>gx", ":'<,'>Gen Fix_Code<CR>", { noremap = true })
-            vim.keymap.set("n", "<leader>gl", ":'<,'>GenloadModel<CR>", { noremap = true })
-            vim.keymap.set("n", "<leader>gu", ":'<,'>GenUnloadModel<CR>", { noremap = true })
-
-            -- Auto-select model on startup
-            require("gen").select_model()
+            vim.keymap.set("n", "<leader>gl", "<CMD>GenLoadModel<CR>", { noremap = true })
+            vim.keymap.set("n", "<leader>gu", "<CMD>GenUnloadModel<CR>", { noremap = true })
         end,
     },
 ```
@@ -91,7 +91,8 @@ and once the window is closed, you start with a fresh conversation.
 
 For prompts which don't automatically replace the previously selected text (`replace = false`), you can replace the selected text with the generated output with `<c-cr>`.
 
-Also added ```:GenUnloadModel``` and ```:GenloadModel``` commands to load and unload models.
+### Note:
+To use genlms you need to load or unload models with these commands ```:GenUnloadModel``` and ```:GenloadModel``` .
 
 ##### Models:
 
