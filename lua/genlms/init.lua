@@ -301,10 +301,10 @@ local function create_window(cmd, opts)
         globals.float_win = vim.api.nvim_open_win(globals.result_buffer, true, win_opts)
         setup_window()
     elseif display_mode == "horizontal-split" then
-        vim.cmd("split gen.nvim")
+        vim.cmd("split genlms.nvim")
         setup_window()
     else
-        vim.cmd("vnew gen.nvim")
+        vim.cmd("vnew genlms.nvim")
         setup_window()
     end
     vim.keymap.set("n", "<esc>", function()
@@ -558,7 +558,7 @@ M.run_command = function(cmd, opts)
         end,
     })
 
-    local group = vim.api.nvim_create_augroup("gen", { clear = true })
+    local group = vim.api.nvim_create_augroup("genlms", { clear = true })
     vim.api.nvim_create_autocmd("WinClosed", {
         buffer = globals.result_buffer,
         group = group,
@@ -626,7 +626,7 @@ local function select_prompt(cb)
     end)
 end
 
-vim.api.nvim_create_user_command("Gen", function(arg)
+vim.api.nvim_create_user_command("Genlms", function(arg)
    
     local mode
     if arg.range == 0 then
