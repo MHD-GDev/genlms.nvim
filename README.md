@@ -43,16 +43,16 @@ Example with Lazy
             })
 
             -- Key mappings
-            vim.keymap.set({ "n", "v" }, "<leader>]", ":Gen<CR>")
-            vim.keymap.set("n", "<leader>ga", "<CMD>Gen Ask<CR>", { noremap = true })
-            vim.keymap.set("n", "<leader>gc", "<CMD>Gen Chat<CR>", { noremap = true })
-            vim.keymap.set("n", "<leader>gg", "<CMD>Gen Generate<CR>", { noremap = true })
-            vim.keymap.set("v", "<leader>gC", ":'<,'>Gen Change<CR>", { noremap = true })
-            vim.keymap.set("v", "<leader>ge", ":'<,'>Gen Enhance_Code<CR>", { noremap = true })
-            vim.keymap.set("v", "<leader>gR", ":'<,'>Gen Review_Code<CR>", { noremap = true })
-            vim.keymap.set("v", "<leader>gs", ":'<,'>Gen Summarize<CR>", { noremap = true })
-            vim.keymap.set("v", "<leader>ga", ":'<,'>Gen Ask<CR>", { noremap = true })
-            vim.keymap.set("v", "<leader>gx", ":'<,'>Gen Fix_Code<CR>", { noremap = true })
+            vim.keymap.set({ "n", "v" }, "<leader>]", ":Genlms<CR>")
+            vim.keymap.set("n", "<leader>ga", "<CMD>Genlms Ask<CR>", { noremap = true })
+            vim.keymap.set("n", "<leader>gc", "<CMD>Genlms Chat<CR>", { noremap = true })
+            vim.keymap.set("n", "<leader>gg", "<CMD>Genlms Generate<CR>", { noremap = true })
+            vim.keymap.set("v", "<leader>gC", ":'<,'>Genlms Change<CR>", { noremap = true })
+            vim.keymap.set("v", "<leader>ge", ":'<,'>Genlms Enhance_Code<CR>", { noremap = true })
+            vim.keymap.set("v", "<leader>gR", ":'<,'>Genlms Review_Code<CR>", { noremap = true })
+            vim.keymap.set("v", "<leader>gs", ":'<,'>Genlms Summarize<CR>", { noremap = true })
+            vim.keymap.set("v", "<leader>ga", ":'<,'>Genlms Ask<CR>", { noremap = true })
+            vim.keymap.set("v", "<leader>gx", ":'<,'>Genlms Fix_Code<CR>", { noremap = true })
             vim.keymap.set("n", "<leader>gl", "<CMD>GenLoadModel<CR>", { noremap = true })
             vim.keymap.set("n", "<leader>gu", "<CMD>GenUnloadModel<CR>", { noremap = true })
         end,
@@ -66,19 +66,19 @@ Use command `Gen` to generate text based on predefined and customizable prompts.
 Example key maps:
 
 ```lua
-vim.keymap.set({ 'n', 'v' }, '<leader>]', ':Gen<CR>')
+vim.keymap.set({ 'n', 'v' }, '<leader>]', ':Genlms<CR>')
 ```
 
-You can also directly invoke it with one of the [predefined prompts](./lua/gen/prompts.lua) or your custom prompts:
+You can also directly invoke it with one of the [predefined prompts](./lua/genlms/prompts.lua) or your custom prompts:
 
 ```lua
-vim.keymap.set('v', '<leader>]', ':Gen Enhance_Grammar_Spelling<CR>')
+vim.keymap.set('v', '<leader>]', ':Genlms Enhance_Grammar_Spelling<CR>')
 ```
 
 After a conversation begins, the entire context is sent to the LLM. That allows you to ask follow-up questions with
 
 ```lua
-:Gen Chat
+:Genlms Chat
 ```
 
 and once the window is closed, you start with a fresh conversation.
@@ -94,7 +94,7 @@ To use genlms you need to load or unload models with these commands ```:GenUnloa
 
 ## Custom Prompts
 
-[All prompts](./lua/gen/prompts.lua) are defined in `require('gen').prompts`, you can enhance or modify them.
+[All prompts](./lua/genlms/prompts.lua) are defined in `require('genlms').prompts`, you can enhance or modify them.
 
 Example:
 
