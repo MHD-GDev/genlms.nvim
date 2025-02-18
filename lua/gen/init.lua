@@ -2,7 +2,6 @@ local prompts = require("gen.prompts")
 local M = {}
 
 local globals = {}
-local model_cache = {}
 
 local function reset(keep_selection)
     if not keep_selection then
@@ -19,73 +18,6 @@ local function reset(keep_selection)
     globals.result_string = ""
     globals.context = nil
     globals.context_buffer = nil
-    if globals.temp_filename then
-        os.remove(globals.temp_filename)
-        globals.temp_filename = nil
-    end
-end
-
-local function cache_model(model_id)
-    if model_id then
-        model_cache[model_id] = {
-            timestamp = os.time(),
-            last_used = os.time(),
-            forced_selection = true  -- New flag to track forced selections
-        }
-    end
-end
-
-local function get_cached_model()
-    for model_id, cache_data in pairs(model_cache) do
-        if os.time() - cache_data.timestamp < 3600 and cache_data.forced_selection then
-            return model_id
-        end
-    end
-    return nil
-end
-
-reset()
-
-local function cleanup_buffers()
-    if globals.result_buffer and vim.api.nvim_buf_is_valid(globals.result_buffer) then
-        vim.api.nvim_buf_delete(globals.result_buffer, { force = true })
-    end
-    if globals.context_buffer then
-        globals.context_buffer = nil
-    end
-end
-
-local function is_model_loaded()
-    local check = vim.fn.system("curl -s http://" .. M.host .. ":" .. M.port .. "/v1/models")
-    local success, decoded = pcall(vim.fn.json_decode, check)
-    
-    if success and decoded and decoded.data and #decoded.data > 0 then
-        -- Make an additional test request to verify model is responsive
-        local test_response = vim.fn.system("curl -s -X POST http://" .. M.host .. ":" .. M.port .. "/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"" .. decoded.data[1].id .. "\",\"messages\":[{\"role\":\"system\",\"content\":\"test\"}]}'")
-        local test_success = pcall(vim.fn.json_decode, test_response)
-        return test_success
-    end
-    return false
-end
-
-
-local function handle_model_load_error()
-    vim.notify("Failed to load model. Please check LM Studio connection.", vim.log.levels.ERROR)
-    return false
-end
-
-local function check_loaded_model()
-    local response = vim.fn.system("curl -s http://" .. M.host .. ":" .. M.port .. "/v1/models")
-    if not response or #response == 0 then
-        return handle_model_load_error()
-    end
-
-    local success, decoded = pcall(vim.fn.json_decode, response)
-    if not success or not decoded or not decoded.data or #decoded.data == 0 then
-        return handle_model_load_error()
-    end
-
-    return decoded.data and #decoded.data > 0
 end
 
 
@@ -297,24 +229,14 @@ local function write_to_buffer(lines)
         end
     end
 
-if #lines > 1000 then
-        local chunks = chunk_large_content(table.concat(lines, "\n"), 1000)
-        for _, chunk in ipairs(chunks) do
-            vim.schedule(function()
-                -- Existing buffer write logic for chunk
-                -- ...
-            end)
-        end
-        return
-    end
-
     vim.api.nvim_set_option_value("modifiable", false, { buf = globals.result_buffer })
 end
 
 local function create_window(cmd, opts)
-    if globals.result_buffer then
-        write_to_buffer({ "Thinking...", "" })
-    end
+    -- Create buffer and show "Thinking..." immediately
+    globals.result_buffer = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_lines(globals.result_buffer, 0, -1, false, {"Thinking...", ""})
+    
     local function setup_window()
         globals.result_buffer = vim.fn.bufnr("%")
         globals.float_win = vim.fn.win_getid()
@@ -365,9 +287,7 @@ local function create_window(cmd, opts)
 end
 
 M.exec = function(options)
-    if not is_model_loaded() then
-        M.select_model()
-    end
+  
     local opts = vim.tbl_deep_extend("force", M, options)
     if opts.hidden then
         -- the only reasonable thing to do if no output can be seen
@@ -496,12 +416,6 @@ M.exec = function(options)
         -- Add new prompt to the context
         table.insert(messages, { role = "user", content = prompt })
         body.messages = messages
-        if M.model_options ~= nil then -- llamacpp server - model options: eg. temperature, top_k, top_p
-            body = vim.tbl_extend("force", body, M.model_options)
-        end
-        if opts.model_options ~= nil then -- override model options from gen command (if exist)
-            body = vim.tbl_extend("force", body, opts.model_options)
-        end
 
         if opts.file ~= nil then
             local json = opts.json(body, false)
@@ -668,9 +582,7 @@ local function select_prompt(cb)
 end
 
 vim.api.nvim_create_user_command("Gen", function(arg)
-    if not check_loaded_model() then
-        M.select_model()
-    end
+   
     local mode
     if arg.range == 0 then
         mode = "n"
@@ -789,93 +701,6 @@ function Process_response(str, json_response)
     write_to_buffer(lines)
 end
 
-M.select_model = function()
-    -- First check if LMS server is running and get model status
-    local response = vim.fn.system("curl -s -m 2 http://" .. M.host .. ":" .. M.port .. "/v1/models")
-    local success, decoded = pcall(vim.fn.json_decode, response)
-
-    -- Case 2: Server is ON and model is loaded
-    if success and decoded and decoded.data and #decoded.data > 0 then
-        local current_model = decoded.data[1].id
-        print("Model already loaded: " .. current_model)
-        M.model = current_model
-        return
-    end
-
-    -- Case 1: Server is OFF or not responding
-    -- Start server first
-    vim.fn.system("lms server start --cors=true")
-
-    -- Get available models and let user select
-    local models = M.list_models(M)
-    if #models > 0 then
-        vim.ui.select(models, { prompt = "Select model to load:" }, function(item)
-            if item then
-                vim.fn.system("lms load " .. item)
-                -- Verify model was loaded successfully
-                local verify_response = vim.fn.system("curl -s -m 2 http://" .. M.host .. ":" .. M.port .. "/v1/models")
-                local verify_success, verify_decoded = pcall(vim.fn.json_decode, verify_response)
-                if verify_success and verify_decoded and verify_decoded.data and #verify_decoded.data > 0 then
-                    print("Model set to " .. item)
-                    M.model = item
-                    cache_model(item)
-                else
-                    print("Failed to load model. Please try again.")
-                    M.select_model() -- Retry model selection
-                end
-            end
-        end)
-    else
-        print("No models found. Please add models to LM Studio first.")
-    end
-end
-
-
-M.select_model2 = function()
-    -- First ensure LMS server is running
-    vim.fn.system("lms server start --cors=true")
-
-    -- Check current model status
-    local response = vim.fn.system("curl -s -m 2 http://" .. M.host .. ":" .. M.port .. "/v1/models")
-    local success, decoded = pcall(vim.fn.json_decode, response)
-
-    -- Get available models
-    local models = M.list_models(M)
-
-    -- If no models available, exit early
-    if #models == 0 then
-        print("No models found. Please add models to LM Studio first.")
-        return
-    end
-
-    -- Unload any existing model
-    if success and decoded and decoded.data and #decoded.data > 0 then
-        local current_model = decoded.data[1].id
-        vim.fn.system("lms unload " .. current_model)
-    end
-
-    -- Present model selection to user
-    vim.ui.select(models, { prompt = "Select model to load:" }, function(item)
-        if item then
-            vim.fn.system("lms load " .. item)
-            -- Verify model was loaded successfully
-            local verify_response = vim.fn.system("curl -s -m 2 http://" .. M.host .. ":" .. M.port .. "/v1/models")
-            local verify_success, verify_decoded = pcall(vim.fn.json_decode, verify_response)
-            if verify_success and verify_decoded and verify_decoded.data and #verify_decoded.data > 0 then
-                print("Model set to " .. item)
-                M.model = item
-                cache_model(item)
-            else
-                print("Failed to load model. Please try again.")
-                M.select_model2()
-            end
-        else
-            M.select_model2()
-        end
-    end)
-end
-
-
 -- This code let the user unload the model themselves
 vim.api.nvim_create_user_command("GenUnloadModel", function()
     local response = vim.fn.system("curl -s http://" .. M.host .. ":" .. M.port .. "/v1/models")
@@ -883,6 +708,7 @@ vim.api.nvim_create_user_command("GenUnloadModel", function()
     if success and decoded and decoded.data and #decoded.data > 0 then
         local model_id = decoded.data[1].id
         vim.fn.system("lms unload " .. model_id)
+        vim.fn.system("lms server stop")
         print("Unloaded model: " .. model_id)
     end
 end, {})
@@ -895,39 +721,8 @@ vim.api.nvim_create_user_command("GenLoadModel", function()
             vim.fn.system("lms load " .. item)
             print("Model set to " .. item)
             M.model = item
-            cache_model(item)
         end
     end)
 end, {})
-
--- This commented out code is for unloading the model when Vim is closed
-
-vim.api.nvim_create_autocmd("VimLeavePre", {
-    callback = function()
---         -- Check if model is loaded before attempting to unload
---         local check = vim.fn.system("curl -s http://" .. M.host .. ":" .. M.port .. "/v1/models")
---         if check and #check > 0 then
---             local success, decoded = pcall(vim.fn.json_decode, check)
---             if success and decoded and decoded.data and #decoded.data > 0 then
---                 local model_id = decoded.data[1].id
---                 vim.fn.system("lms unload " .. model_id)
---                 print("Unloaded model: " .. model_id)
---             end
---         end
-        -- Stop the LM Studio server
-        vim.fn.system("lms server stop")
-    end
-})
-
--- This triggers model selection at startup
-vim.api.nvim_create_autocmd("VimEnter", {
-    callback = function()
-        vim.schedule(function()
-            if not is_model_loaded() then
-                M.select_model()
-            end
-        end)
-    end,
-})
 
 return M
