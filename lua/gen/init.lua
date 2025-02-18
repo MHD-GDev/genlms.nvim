@@ -57,8 +57,17 @@ end
 
 local function is_model_loaded()
     local check = vim.fn.system("curl -s http://" .. M.host .. ":" .. M.port .. "/v1/models")
-    return vim.fn.json_decode(check).data ~= nil
+    local success, decoded = pcall(vim.fn.json_decode, check)
+    
+    if success and decoded and decoded.data and #decoded.data > 0 then
+        -- Make an additional test request to verify model is responsive
+        local test_response = vim.fn.system("curl -s -X POST http://" .. M.host .. ":" .. M.port .. "/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"" .. decoded.data[1].id .. "\",\"messages\":[{\"role\":\"system\",\"content\":\"test\"}]}'")
+        local test_success = pcall(vim.fn.json_decode, test_response)
+        return test_success
+    end
+    return false
 end
+
 
 local function handle_model_load_error()
     vim.notify("Failed to load model. Please check LM Studio connection.", vim.log.levels.ERROR)
@@ -893,8 +902,8 @@ end, {})
 
 -- This commented out code is for unloading the model when Vim is closed
 
--- vim.api.nvim_create_autocmd("VimLeavePre", {
---     callback = function()
+vim.api.nvim_create_autocmd("VimLeavePre", {
+    callback = function()
 --         -- Check if model is loaded before attempting to unload
 --         local check = vim.fn.system("curl -s http://" .. M.host .. ":" .. M.port .. "/v1/models")
 --         if check and #check > 0 then
@@ -905,10 +914,10 @@ end, {})
 --                 print("Unloaded model: " .. model_id)
 --             end
 --         end
---         -- Stop the LM Studio server
---         vim.fn.system("lms server stop")
---     end
--- })
+        -- Stop the LM Studio server
+        vim.fn.system("lms server stop")
+    end
+})
 
 -- This triggers model selection at startup
 vim.api.nvim_create_autocmd("VimEnter", {
