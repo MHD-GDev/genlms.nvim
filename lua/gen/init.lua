@@ -1,4 +1,4 @@
-local prompts = require("gen.prompts")
+local prompts = require("genlms.prompts")
 local M = {}
 
 local globals = {}
