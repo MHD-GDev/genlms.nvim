@@ -4,7 +4,7 @@ return {
     Summarize = { prompt = "Summarize the following text:\n$text" },
     Ask = { prompt = "Here is the code:\n```$filetype\n$text\n```\n\n My question is: $input" },
     Change = {
-        prompt = "Change the following text, $input, just output the final text without additional quotes around it:\n$text",
+        prompt = "Change the following code:\n```$filetype\n$text\n```\n\n, $input, just output the final text without additional quotes around it:\n$text",
         replace = true,
     },
     Enhance_Grammar_Spelling = {
