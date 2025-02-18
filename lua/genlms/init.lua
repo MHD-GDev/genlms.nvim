@@ -84,7 +84,7 @@ end
 
 local default_options = {
     host = "localhost",
-    port = "1123",
+    port = "1234",
     file = false,
     debug = false,
     body = { stream = true },
