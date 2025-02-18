@@ -47,7 +47,7 @@ Example with Lazy
             vim.keymap.set("n", "<leader>ga", "<CMD>Gen Ask<CR>", { noremap = true })
             vim.keymap.set("n", "<leader>gc", "<CMD>Gen Chat<CR>", { noremap = true })
             vim.keymap.set("n", "<leader>gg", "<CMD>Gen Generate<CR>", { noremap = true })
-            vim.keymap.set("v", "<leader>gC", ":'<,'>Gen Change_Code<CR>", { noremap = true })
+            vim.keymap.set("v", "<leader>gC", ":'<,'>Gen Change<CR>", { noremap = true })
             vim.keymap.set("v", "<leader>ge", ":'<,'>Gen Enhance_Code<CR>", { noremap = true })
             vim.keymap.set("v", "<leader>gR", ":'<,'>Gen Review_Code<CR>", { noremap = true })
             vim.keymap.set("v", "<leader>gs", ":'<,'>Gen Summarize<CR>", { noremap = true })
