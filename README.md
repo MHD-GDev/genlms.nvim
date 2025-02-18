@@ -27,7 +27,7 @@ Example with Lazy
             "nvim-lualine/lualine.nvim",
         },
         config = function()
-            require("gen").setup({
+            require("genlms").setup({
                 quit_map = "q",
                 retry_map = "<c-r>",
                 accept_map = "<c-cr>",
@@ -99,11 +99,11 @@ To use genlms you need to load or unload models with these commands ```:GenUnloa
 Example:
 
 ````lua
-require('gen').prompts['Elaborate_Text'] = {
+require('genlms').prompts['Elaborate_Text'] = {
   prompt = "Elaborate the following text:\n$text",
   replace = true
 }
-require('gen').prompts['Fix_Code'] = {
+require('genlms').prompts['Fix_Code'] = {
   prompt = "Fix the following code. Only output the result in format ```$filetype\n...\n```:\n```$filetype\n$text\n```",
   replace = true,
   extract = "```$filetype\n(.-)```"
