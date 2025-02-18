@@ -20,12 +20,6 @@ Install with your favorite plugin manager, e.g. [lazy.nvim](https://github.com/f
 Example with Lazy
 
 ```lua
--- Minimal configuration
-{ "MHD-GDev/genlms.nvim" },
-
-```
-
-```lua
     -- Custom Parameters (with defaults)
     {
         "MHD-GDev/genlms.nvim",
