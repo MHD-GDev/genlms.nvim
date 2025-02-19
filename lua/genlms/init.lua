@@ -757,6 +757,7 @@ vim.api.nvim_create_user_command("GenUnloadModel", function()
         -- Ensure server stops after unloading
         vim.fn.system("lms server stop")
         vim.fn.system("lms server stop")
+        vim.fn.system("pkill electron")
         print("Unloaded model and stopped server: " .. model_id)
         M.update_lualine_status() -- Updates lualine status
     end
