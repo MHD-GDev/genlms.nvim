@@ -42,7 +42,7 @@ Example with Lazy
                 debug = false,
             })
 
-            -- Key mappings
+            -- Key mappings (Change as you like)
             vim.keymap.set({ "n", "v" }, "<leader>]", ":Genlms<CR>")
             vim.keymap.set("n", "<leader>ga", "<CMD>Genlms Ask<CR>", { noremap = true })
             vim.keymap.set("n", "<leader>gc", "<CMD>Genlms Chat<CR>", { noremap = true })
